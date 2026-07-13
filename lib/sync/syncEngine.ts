@@ -149,10 +149,13 @@ export async function pullUserDataFromSupabase(userId: string): Promise<void> {
       swipesRes,
       matchesRes,
       convsRes,
-      msgsRes,
       notifRes,
       weightsRes,
       prioritiesRes,
+      allUsersRes,
+      allClientProfilesRes,
+      allProviderProfilesRes,
+      allOpenRequestsRes,
     ] = await Promise.all([
       supabase.from('users').select('*').eq('id', userId).maybeSingle(),
       supabase.from('client_profiles').select('*').eq('user_id', userId).maybeSingle(),
@@ -161,16 +164,23 @@ export async function pullUserDataFromSupabase(userId: string): Promise<void> {
       supabase.from('swipes').select('*').eq('swiper_id', userId),
       supabase.from('matches').select('*').or(`client_id.eq.${userId},provider_id.eq.${userId}`),
       supabase.from('conversations').select('*'),
-      supabase.from('messages').select('*').eq('sender_id', userId),
       supabase.from('notifications').select('*').eq('user_id', userId),
       supabase.from('weights').select('*').eq('user_id', userId),
       supabase.from('user_priorities').select('*').eq('user_id', userId),
+      supabase.from('users').select('*'),
+      supabase.from('client_profiles').select('*'),
+      supabase.from('provider_profiles').select('*'),
+      supabase.from('service_requests').select('*').eq('status', 'open'),
     ]);
 
     if (userRes.data) await db.users.put(userRes.data);
+    if (allUsersRes.data) await db.users.bulkPut(allUsersRes.data);
     if (clientProfileRes.data) await db.client_profiles.put(clientProfileRes.data);
+    if (allClientProfilesRes.data) await db.client_profiles.bulkPut(allClientProfilesRes.data);
     if (providerProfileRes.data) await db.provider_profiles.put(providerProfileRes.data);
+    if (allProviderProfilesRes.data) await db.provider_profiles.bulkPut(allProviderProfilesRes.data);
     if (requestsRes.data) await db.service_requests.bulkPut(requestsRes.data);
+    if (allOpenRequestsRes.data) await db.service_requests.bulkPut(allOpenRequestsRes.data);
     if (swipesRes.data) await db.swipes.bulkPut(swipesRes.data);
     if (matchesRes.data) {
       await db.matches.bulkPut(matchesRes.data);
@@ -179,9 +189,12 @@ export async function pullUserDataFromSupabase(userId: string): Promise<void> {
         const relevantConvs = convsRes.data.filter((c) => matchIds.includes(c.match_id));
         await db.conversations.bulkPut(relevantConvs);
         const convIds = relevantConvs.map((c) => c.id);
-        if (convIds.length > 0 && msgsRes.data) {
-          const relevantMsgs = msgsRes.data.filter((m) => convIds.includes(m.conversation_id));
-          await db.messages.bulkPut(relevantMsgs);
+        if (convIds.length > 0) {
+          const { data: allMsgsRes } = await supabase
+            .from('messages')
+            .select('*')
+            .in('conversation_id', convIds);
+          if (allMsgsRes) await db.messages.bulkPut(allMsgsRes);
         }
       }
     }
