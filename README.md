@@ -29,8 +29,8 @@ Binder connects clients who need professional services with skilled providers in
 ## Setup
 
 ### 1. Prerequisites
-- Node.js 18+
-- A Supabase project
+- Node.js 18+ installed on your computer
+- A Supabase project (free at supabase.com)
 
 ### 2. Install Dependencies
 ```bash
@@ -38,23 +38,37 @@ npm install
 ```
 
 ### 3. Environment Variables
-Create a `.env.local` file:
+Create a `.env.local` file in the project root with your Supabase credentials:
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
 
+Get these from your Supabase dashboard: Project Settings > API > URL and anon public key.
+
 ### 4. Database Setup
-The database schema is already applied to the configured Supabase instance.
-If setting up fresh, run the migration from `supabase/migrations/001_binder_initial_schema.sql`.
+The database schema and seed data are already applied to the configured Supabase instance.
 
-### 5. Seed Dummy Data
-Navigate to `/seed` in your browser to populate dummy test accounts.
+If setting up a fresh Supabase project:
+1. Go to your Supabase dashboard > SQL Editor
+2. Copy and run the contents of `supabase/migrations/20260710173603_001_binder_initial_schema.sql` (creates all tables + RLS policies)
+3. Then run `supabase/migrations/20260713105232_002_seed_binder_demo_data.sql` (inserts 10 dummy users, requests, matches, messages)
+4. In Supabase dashboard > Authentication > Providers > Email: turn OFF "Confirm email" (so test accounts work without verification)
 
-### 6. Run Development Server
+### 5. Run Locally
 ```bash
 npm run dev
 ```
+Then open http://localhost:3000 in your browser.
+
+### 6. Build for Production
+```bash
+npm run build
+npm run start
+```
+
+### 7. Seed Dummy Data (if needed)
+If you're using a fresh database, navigate to `/seed` in your browser to populate dummy test accounts.
 
 ## Test Accounts
 

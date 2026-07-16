@@ -27,6 +27,19 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  webpack: (config) => {
+    config.snapshot = {
+      managedPaths: [],
+      immutablePaths: [],
+    };
+    config.parallelism = 1;
+    config.cache = false;
+    return config;
+  },
+  experimental: {
+    workerThreads: false,
+    cpus: 1,
+  },
 };
 
 module.exports = withPWA(nextConfig);
